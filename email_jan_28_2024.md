@@ -1,5 +1,55 @@
 ## Mission: Develop advanced models that are in sync with human values.
 
+- System 2 Thinking
+    - Engineering work status
+        - We change the design to separate the search and training in different jobs. It has the benefits of using different model configurations for search and training. We serialize the search results in files so it can be reused for training different models. 
+        - The trainer of the hybrid model has been implemented and tested on the GSM8k dataset.
+        - We have implemented the dual optimizers for training the hybrid model. We make sure the policy network and the value prediction head are optimized independently. 
+        - To handle the 4 hr cluster time limit, we have implemented the MCTS search checkpoints so it can load from the previous run. 
+        - We have fixed most of the bugs in the MCTSs search and training pipeline. We are at the stage that it is ready to run some experiments.
+    - GSM8K preliminary results
+        - We have shown, by increasing the number MCTS steps, the accuracy of solving the math problems is improved significantly.
+            - The greedy sampling method has an accuracy of 31% using the SteerLM Solar model. 200 MCTS steps has an accuracy of 69.1%. 400 MCTS steps has an accuracy of 73%
+        - After training the hybrid model on the search results from 50% of the training data, the accuracy of solving the math problems is improved significantly. 
+            |search method|train accuracy| test accuracy|
+            |---|---|---|
+            |oracle + value|90.5%| 90.2%|
+            |no oracle + value|75.6%| 71.3%|
+            |oracle + no value|77.8%| 78.0%|
+            |greedy(no search)|61%|62%|
+        We see the policy network is improved by training on the search results from 31% to 61%. Turing off the oracle and using value head only, the test accuracy reach 71.3%. Turning off the value head and using the oracle only, the test accuracy reach 78.0%. Combine the oracle and value head, the test accuracy reach 90.2%. This is a very promising result that it shows the value head learns the heuristics about the current partial reasoning process. This heuristics can be used to guide the search process to find the solution and generalize well to the unseen problems. 
+        - We evaluated the MT benchmark score of the improved hybrid model. The math category has improved by 0.75 and the coding category has improved by 0.35. The other categories have slightly degraded performance. 
+    - Next steps
+        - Use Python Celery library for the distributed search that it fits well to the be used in the Slurm cluster.
+        - Run full experiments on the GSM8k dataset to evaluate the hybrid model performance.
+        - Switch to Mistral model for experiments so we can compare the performance with the other research papers.
+        - Try harder MATH dataset.
+
+- SteerLM Model Alignments
+    - Aligned 30% 340B model with SteerLM, achieving an MT benchmark of 7.7, which is the highest SteerLM MT-benchmark we have achieved. Currently working on aligning the 340B model trained with 50% of the tokens.
+    - Aligned the 15B-CT-v2 model with SteerLM, using Shengyang's synthetic generated dataset annotated by 43B steerLM reward model. It achieves MT benchmark of 7.29, which can be used commercially.
+    - Aligned the 22B-CT-v2 model with SteerLM, using Jiaqi's wooden earthworm dataset annotated by 43B steerLM reward model. It achieves MT benchmark of 7.39, which is the slightly higher than the SFT model.
+
+- Model Alignment Benchmark Evaluation
+    The model alignment benchmark evaluation engineering work is almost done. 
+    -  We have scripts to generate MT-benchmark responses, data factory human evaluation responses.
+    - Zhilin added scripts to run Truthful QA, MT-benchmark evaluation (GPT and Mixtral), FKGL 
+    - Jiaqi added scripts to evaluate the reward model performance both in-distribution and out-of-distribution.
+    - Olivier integrated mlops eval-tool and it can be used to evaluate the MMLU model performance 0-shot and 5-shots
+    - Shengyang contributed scripts to monitor and run the evaluation using Mixtral for checkpoint selection.
+
+- RNN-like Transformer Development
+    - Brent helps to accelerate the numerator forward computation kernel 10x faster than the original implementation. This makes our method to be practical for the training large models efficiently.
+    - Zhilin has shown the RNN-like Transformer model improves the language modeling performance with increasing the order of the Taylor expansion. The gap between the original transformer and the RNN-like transformer is small with 8th order expansion.
+    - Makesh has shown the RNN-like Transformer model can solve the selective copying and induction heads problems with 100% accuracy in the test set even with order 1 approximation.
+    - We plan to focus on practical applications of the RNN-like Transformer model. Hopefully we can use it to solve some real world problems.
+
+
+
+
+
+## Mission: Develop advanced models that are in sync with human values.
+
 - Launch the System 2 Thinking Project.
     - System 2 represents a slower, more deliberative, and logical thought process. To solve complex problems such as coding, math, and reasoning, our Language Model needs to incorporate System 2 thinking. 
     - We're making significant progress in integrating the AlphaZero algorithm into the Language Model via the NeMo Aligner. This includes:
