@@ -1,3 +1,344 @@
+Aug 8
+
+Here's a revised version of the email with improved English and grammar:
+
+Mission: Develop advanced models that align with human values
+
+### System 2 Thinking
+
+* Presented the System 2 project at the LLM F2F meeting, summarizing recent progress. View the [Slide](https://nvidia-my.sharepoint.com/:p:/r/personal/yidong_nvidia_com/_layouts/15/doc2.aspx?sourcedoc=%7BCD9464FC-E04F-4938-B6A8-DF301F7D6023%7D&file=LLM_F2F.pptx&action=edit&mobileredirect=true&DefaultItemOpen=1) and [Recording](https://nvidia-my.sharepoint.com/personal/bginsburg_nvidia_com/_layouts/15/stream.aspx?id=%2Fpersonal%2Fbginsburg%5Fnvidia%5Fcom%2FDocuments%2FRecordings%2FLLM%2DF2F%20%2D%203%2D20240711%5F130212%2DMeeting%20Recording%2Emp4&referrer=StreamWebApp%2EWeb&referrerScenario=AddressBarCopied%2Eview%2E379ce094%2Dde05%2D422d%2D9e75%2De726fbb7baaf).
+
+* We ran tree-logics MCTS on GSM8k datasets, achieving good accuracy and computational performance compared to the Alpha-zero approach. However, it has limitations:
+  * It underestimates value, preventing further exploration of branches.
+  * Using multiple nucleus samplings for estimation might work but is costly. Verification needed.
+  * For finding good solutions, it's slower than random temperature sampling, as it needs to try different actions to decide which to exploit. Given limited resources and a large search space, MCTS isn't the most efficient solution-finding method.
+
+* The team's current focus is pretraining [LM Companion](https://docs.google.com/document/d/1dqHAcs_-csdml1RrGyj6dwDhp1YNq_xf5qAC3cN_c0A/edit#heading=h.hykhwp64jt1s), a foundation value model designed to enhance language model outputs. LM Companion works alongside language models, focusing on evaluating partial generation goodness while the language model focuses on language modeling.
+
+  * Key advantages of LM Companion:
+    * Independent from the base language model, allowing flexible pairing with various instruction-following models
+    * Provides a foundation for advanced search techniques like MCTS and addresses limitations of Alpha-zero and tree-logics methods
+    * Applicable across a wide range of language tasks
+
+  * Integration with Existing Models:
+    * Works alongside Supervised Fine-Tuned (SFT) language models
+    * SFT model generates candidate tokens, and LM Companion evaluates and ranks these candidates, achieving high-reward responses in one shot. Performance can be further improved using MCTS.
+
+  * Rationale for our value model training approach: Despite a high percentage of nodes with a branching factor of 1, our approach offers significant improvements over RLHF by capturing more structural information, propagating values through the tree, and providing better intermediate value estimation with lower variance. A [recent paper](https://arxiv.org/pdf/2403.03950) shows that training a value model with chess game engine-annotated data can reach Alpha-zero performance without search, validating our approach.
+
+  * Training data preparation:
+    * Use Gemma2-it-27b as an actor to generate responses. Annotate responses with a newly trained llama3.1 70b reward model by @zhilin, surpassing the 340b reward model in reward bench.
+    * Two approaches to generate synthetic data for training the value model:
+       * Run nucleus sampling to generate multiple samples per prompt. Construct the token-tree post-response generation.
+         * Average response generation time: 0.489559s
+       * Tree-based text generation
+         * Grow the tree in a depth-first branch manner
+         * Use a customized function to define the token unit forming a node
+         * Use dynamic batching to improve inference throughput
+         * Average response generation time: 0.44286856s
+
+* Training data analysis (Gerald and Yian):
+    * Token-tree constructed by nucleus sampled data:
+        * 98.44% of total tokens have branching_factor == 1, as expected
+        * Approximately 17k responses needed to estimate intermediate value within 5% error
+        * Distribution of depth for nodes with branching_factor > 1 shows concentration in the 10-40 token range, indicating natural branching points
+        * Comparison of GSM8K responses from nucleus sampled data and tree-based text generation shows low diversity in nucleus sampled data, possibly due to Gemma2-it-27b being trained on GSM8K data. This is less problematic in tree-based text generation.
+
+* Mentoring @Jeet's internship research:
+    * Plan to research optimal critical nodes for LM branching and exploration of possibilities, aiming to balance compute and achieve a good value model
+    * Study benchmarks to quantify the goodness of critical nodes
+
+* Next steps (Yian and Gerald):
+    * Reuse Math data generated from previous MCTS search, which has good diversity as the model wasn't trained on GSM8k
+    * Start training a value model with a small dataset to ensure pipeline functionality
+    * Implement evaluation benchmarks for the value model, including in-distribution and out-of-distribution evaluations
+
+
+Mission: Develop advanced models that are in sync with human values
+### System 2 Thinking
+* Presented the system 2 project in the LLM F2F meeting, which summarize the recent progress in the system2 project. Check out the [Slide](https://nvidia-my.sharepoint.com/:p:/r/personal/yidong_nvidia_com/_layouts/15/doc2.aspx?sourcedoc=%7BCD9464FC-E04F-4938-B6A8-DF301F7D6023%7D&file=LLM_F2F.pptx&action=edit&mobileredirect=true&DefaultItemOpen=1) and [Recording](https://nvidia-my.sharepoint.com/personal/bginsburg_nvidia_com/_layouts/15/stream.aspx?id=%2Fpersonal%2Fbginsburg%5Fnvidia%5Fcom%2FDocuments%2FRecordings%2FLLM%2DF2F%20%2D%203%2D20240711%5F130212%2DMeeting%20Recording%2Emp4&referrer=StreamWebApp%2EWeb&referrerScenario=AddressBarCopied%2Eview%2E379ce094%2Dde05%2D422d%2D9e75%2De726fbb7baaf)
+* We have tried to run tree-logics MCTS on GSM8k datasets, and we have achieved good accuracy and computation performace compared with Alpha-zero approrach. However, it has the following limitations:
+  * It underestimates the value and prevents further exploration of that branch​.
+  * Using multiple nucleus samplings to estimate might work but is also costly. We need to verify this. ​
+  * If the goal is to find a good solution, it is slower than random temperatured sampling. It needs to try different actions to decide which one to exploit. ​ Given limited resources and large search space, MCTS is not the most efficient way to find a good solution. 
+* Team's current focus is to pretrained [LM Companion](https://docs.google.com/document/d/1dqHAcs_-csdml1RrGyj6dwDhp1YNq_xf5qAC3cN_c0A/edit#heading=h.hykhwp64jt1s), a foudnation value model that is designed to enhance language model outputs. LM Companion works together with Lanauge model side by side. one is focused on evaluate the goodness of the partial generaiton. and other one is focused on modeling lanaguage.
+  * Key advantages of LM Companion:
+    * Independent from the base language model, flexible pairing with various instruction-following models
+    * Provides foundation for advanced search techniques like MCTS and address the limits with Alpha-zero and tree-logics methods
+    * Applicable across a wide range of language tasks.
+  * Integration with Existing Models:
+    * Works alongside Supervised Fine-Tuned (SFT) language models
+    * SFT model generates candidate tokens and LM Companion evaluates and ranks these candidates. Get high reward response in one shot. The perofmrance can be further improved by using MCTS.
+  * Rational of our value model training approach. Despite having a high percentage of nodes with a branching factor of 1, our value model training apporach offers significant improvements over RLHF by capturing more structural information, propagating values through the tree, and providing better intermediate value estimation with lower variance. In [paper](https://arxiv.org/pdf/2403.03950), it shows training a value model with data annotated by chess game engine can rearch alpha-zero performance without search. This validates our valude model training approach.
+  * Training data preparation.
+    * Use Gemma2-it-27b as actor to generate responses. Annotate the responses with a newly trained llama3.1 70b reward model by @zhilin, which surpasses the 340b reward model in reward bench. 
+    * Two approaches to generate synthetic data for training value model. 
+       * Run neucleus sampling to generate lots of samples per prompt. Construct the token-tree post the response generation.
+         * It takes 0.489559s to generate a response on average
+       * Tree-based text generation
+         * Grow the tree in depth-first branch manner
+         *  Use a customized function to define the unit of tokens that forms a node.
+         * It is using dynamic batching to improve the inference throughput.
+         * It takes 0.44286856s to generate a response on average
+* Training data analysis (Gerald and Yian).
+    * Token-tree constructe by neucleus sampled data.
+        * 98.44% of the total tokens have branching_factor == 1, which is expected since majority the tokens should have bf=1.
+        * Number of repsonses we need to estimate the intermediate value is within 5% error is around 17k. That's the minimum responses we need to have a good value estimate. 
+        * In distribution of depth of nodes with branching_factor > 1 graph, we can see the mass is concentrated in range 10-40 tokens. This indicates 10-40 token range is a natural place where branch happens. 
+        * In a comparison of GSM8K responses from neucleus sampled data nd tree-based text generation method. It is shown that the diversity is very low in neucleus sampled data which might be caused by Gemma2-it-27b is trained on the GSM8K data. It is a lesser problem in tree-based text generation method.
+* Mentoring @Jeet's internship research
+    * Plan to research on what is a good critical node that the LM should spend time to branch on it and explore different possibitiles. The goal is to find a balance in compute and achieve good value model.
+    * Study benchmarks to quantify the goodness of critical node.
+* Next step (Yian and Gerald):
+    * Resuse the Math data generated from previous MCTS search which has good diversity because the model is not trained on the GSM8k 
+    * Start to train a value model with a small dataset to make sure the pipeline works
+    * Implements evaluation benchmarks for value model including in-distribution, out-of-distribution evaluations.  
+
+
+
+TreeLogic NeMo-Inference-Microservice (NIM):
+Develop NIM to enable aligned models to perform System 2 thinking during inference.
+Solve complex problems requiring deep searches at inference time, such as math, coding, and logic problems, paired with a verifier to validate results.
+Generate higher-quality responses coupled with a reward model.
+Produce high-quality positive and negative samples to refine model policies more efficiently than traditional synthetic data generation methods like random sampling and filtering.
+Adjustments to Alpha-Zero Approach:
+Instead of using LLM output logits for value approximation, estimate state value by greedily sampling tokens using TRTLLM and using reward from the feedback function for estimation. This ensures accurate value estimation during the initial tree search.
+Implement a cache function to speed up value function evaluation for the same reasoning path.
+Implement early stopping to halt tree search immediately upon finding a satisfactory solution.
+Results on GSM8K Math Problem:
+Implemented and tested this approach on the GSM8K Math problem, achieving orders of magnitude speedup.
+Average search time per sample reduced dramatically from 2400s to 36s.
+Out of 7473 GSM8K math problems, the search correctly solved 7452 with a success rate of 99.7%.
+Next Steps:
+Explore using a reward model as a generic feedback function, enabling the system to search for high-reward responses defined by the user.
+Test two generalization hypotheses regarding the use of MCTS to enhance LM math-solving capabilities:
+Exposing LLM to more responses per prompt improves math test accuracy.
+Using different prompts for different policy improvement iterations enhances math test accuracy.
+Model Alignment:
+Collaborate on the HelpSteer 2 paper, introducing the SteerLM 2.0 method to address deficiencies in the original SteerLM.
+SteerLM 2.0 employs iterative KL minimization between optimal and current policies to better align generated responses with desired attributes.
+Results include applying SteerLM 2.0 to the Llama 3 70B model with just a fraction of the training data compared to Llama 3 70B Instruct, achieving an MT-Bench score of 8.28, surpassing both Llama 3 70B Instruct (8.16) and GPT-4-0613 (8.12).
+
+
+Mission: Develop advanced models that are in sync with human values
+
+ 
+
+System 2 Thinking
+System 2 research is gaining popularity in the AI community, with recent emergence of several research papers exploring different MCTS techniques for solving math problems. After reviewing our approach, we have identified a few key areas of focus:
+We plan to develop TreeLogic NeMo-Inference-Microservice (NIM) to enable aligned models to perform System 2 thinking during inference. This can:
+Solve complex problems requiring deep searches at inference time, such as math, coding, and logic problems, paired with a verifier to validate results.
+Generate higher-quality responses coupled with a reward model.
+Produce high-quality positive and negative samples to refine model policies more efficiently than traditional synthetic data generation method i.e. random sampling and filtering.
+We found that the alpha-zero approach, effective for complex gaming problems needing constant policy adjustment based on opponent moves, is excessive for NLP tasks. To enable TreeLogic NIM, we made several adjustments:
+Instead of using LLM output logits for value approximation, we estimated state value by greedily sampling tokens using TRTLLM and using reward from the feedback function for estimation. This ensures accurate value estimation during the initial tree search.
+Implemented a cache function to speed up value function evaluation for the same reasoning path.
+Implemented early stopping to halt tree search immediately upon finding a satisfactory solution.
+We implemented and tested this approach on the GSM8K Math problem, achieving orders of magnitude speedup. Average search time per sample reduced dramatically from 2400s to 36s. Out of 7473 GSM8K math problems, the search correctly solved 7452 with a success rate of 99.7%.
+Our next step is to explore using a reward model as a generic feedback function, enabling the system to search for high-reward responses defined by the user. (@Wei Du @Zenodia Charpy)
+We are testing two generalization hypotheses regarding the use of MCTS to enhance LM math-solving capabilities:
+Exposing LLM to more responses per prompt improves math test accuracy. We tested with 4 responses per prompt and used tree search results to enhance policies using SFT, SFT+DPO, and Hybrid models. Results indicate increased responses improve test accuracy (@Gerald Shen):
+Method
+
+           | Method              | Accuracy  |
+           |--------------------|--------|
+           | Hybrid (no replica)| 0.592  |
+           | SFT only           | 0.6244 |
+           | SFT +DPO           | 0.6437 |
+           | Hybrid Model       | 0.65   |
+
+Using different prompts for different policy improvement iterations enhances math test accuracy. Currently, we are testing with the Llama3 8B model (@Gerald Shen).
+We are progressing with the Optimal Defense Policy Improvement project that @erick implemented, involving two feedback functions to operationalize the search.
+Model Alignment
+Collaborating with @Zhilin Wang on the HelpSteer 2 paper, we introduced the SteerLM 2.0 method to address deficiencies in the original SteerLM:
+The original SteerLM lacked a mechanism to ensure generated responses closely adhered to desired attribute distributions, leading to suboptimal alignment.
+SteerLM 2.0 employs iterative KL minimization between optimal and current policies to better align generated responses with desired attributes.
+Results include applying SteerLM 2.0 to the Llama 3 70B model with just a fraction of the training data compared to Llama 3 70B Instruct, achieving an MT-Bench score of 8.28, surpassing both Llama 3 70B Instruct (8.16) and GPT-4-0613 (8.12).
+Published on arXiv and integrated into NeMo-Aligner (Thanks @Gerald Shen for reviewing it) with document, facilitating easy training setup with an example job file available here.
+ 
+
+Attempted SteerLM 340B model alignment, yielding slight inferior results to DPO due to:
+Sole reliance on reward model annotated SFT data proved inadequate; ground truth-verified data is needed to improve the SteerLM alignment results further.
+Suboptimal alignment in the original SteerLM necessitates consideration of SteerLM 2.0.
+Others and Miscellaneous
+Presented HelpSteer poster with @Zhilin Wang at NACCL 2024, drawing significant interest from attendees. Some are keen to explore our dataset, with one researcher suggesting our poster should be recognized as the best research.
+
+
+Jun 21
+
+Mission: Develop advanced models that are in sync with human values
+
+# System 2 Thinking
+ * The system 2 research is getting popular in the AI research community, there have been a few research papers emerging recenlty that try different MCTS techniques to solve math problems. We have reviewed our approach and currently identified a few areas to focus on.
+   * We plan to build TreeLogic NeMo-Inference-Microservice (NIM) that enables any aligned models to do system 2 thinking at the inference time. We think it can be used to 
+      1. solve challenging problems that requires deep searches at inference time, like math, coding, logic problem etc paired with a verifier that can check the results.
+      2. generating better quality responses paired with a reward model.
+      3. generate high quality positive and negative samples that can be used to refine the model policy and build a stronger model. It should be more efficent than generating synthetic data by random sampling + filtering.
+
+      * We think the alpha-zero approach is good for solving hard gaming problems where the policy needs to be constatant adjusted via tree search to consider the opponent's move. It is an over-kill for solving NLP tasks because we only need a good answer and alpha-zero approach uses too much compute resources. To enable TreeLogic NIM, we have made a few changes:
+         * Instead of using LLM output logits as value appromixation, we estimated the state value by greedy sample the tokens using TRTLLM and use the reward from the feedback function as estimation. 
+         * To speed up value function estimation, we implemented a hash function that can speeds up the value evaluation for the same reasoning path.
+         * Implemmented early stop that stops the tree search immediately once a good solution is found. 
+      * We implemented this and tested it on the GSM8K Math problem, it shows orders of magnitude speedup. average search time per sample is reduced from 2400s to 36s. Out of 7473 GSM8K math problems, it can find correct answer for 7452 of them with success rate of 99.7%. 
+      * Next step is to try to use reward model as a generic feedback function. At the inference time, it can search for a high reward response defined by the user. 
+    * We are testing two generalization hypothesis regarding to the using MCTS to improvle LM math solve capablities.
+      * exposing LLM with more responses to the same prompt is helpful for improve the math test accuracy. 
+        * We searched for 4 reponses per prompt and use the tree search results to improve the policy using SFT, SFT+DPO and Hybrid model. The following results show more responses is helpful for improving test accuracy. (Gerald)
+           | Method              | Accuracy  |
+           |--------------------|--------|
+           | Hybrid (no replica)| 0.592  |
+           | SFT only           | 0.6244 |
+           | SFT +DPO           | 0.6437 |
+           | Hybrid Model       | 0.65   |
+      * Use different prompts for different policy improvement iterations is helpful to improve the math test accuracy. 
+        * Currently we are testing it with Llama3 8B model (Gerald). 
+    * We are making progress to the optimal defense policy improvement project that @erick implemented the two feedback functions and got the search running.  
+# Model Alignment 
+  * Working together with Zhilin on the helpsteer paper. Invented a new SteerLM 2.0 method that 
+    * Solvin a problem in the oringal SteerLM that it lacks an explicit mechanism to ensure generated responses adhered closely to desired attribute distributions, leading to suboptimal alignment.
+    * Introduces iterative KL minimization between the optimal policy and current policy to better align generated responses with desired attributes.
+    * Results:
+        * Applied to Llama 3 70B model using only 1% of the training data compared to Llama 3 70B Instruct.
+        * Achieved an MT-Bench score of 8.28, surpassing Llama 3 70B Instruct (8.16) and GPT-4-0613 (8.12).
+    * Publication and Implementation:
+      * Method published on arXiv.
+      * Integrated into NeMo-Aligner with an example job file available here.
+  * Tried to SteerLM 340B model alignment. It didn't produce better results than DPO because 
+    1. Using only the reward model annotated SFT data is not enough. Need to use data that is annotated from verifier i.e. the results should be check with ground truth.
+    2. original SteerLM has suboptimal aligment. Need to try SteerLM 2.0 method.
+# Others and misllaneous
+  * Presented HelpSteer poster with Zhilin at NACCL 2024. Got a large crowed of intertested audiance. Some are interested in trying our dataset. Interestly, one researcher commented that this poster should be awarded as the best research. 
+
+
+
+
+
+
+
+# 
+Mission: Develop advanced models that are in sync with human values.
+
+System 2 Thinking
+Presents the System 2 think project in the 4/23 research report out meeting. Recording is here.
+Current status in summary
+We have implemented AlphaZero like method that adds tree search planning capabilities to LLM to improve the language model reasoning. This method can solve hard problems such as math, coding, and planning by using ground truth feedback.
+We have designed a generic and flexible framework to integrate the tree search method with any language model and any verifier or reward model. We have also optimized the tree search efficiency by adding dynamic branching factor to limit the action space.
+We have experimented with different verifiers and reward models to guide the tree search and evaluate the model outputs. We have also enabled the model to interact with different environments and use tools to get more information and feedback.
+We have applied the tree search method to various tasks and domains, such as synthetic data generation, model alignment, agent policy improvement, and jailbreak defense. We have some initial promising results and improved the model performance.
+We have also explored some alternative ways of doing tree search, such as using policy only network, log probability as value, and expected future value to train value network. We have done comparison between different approaches.
+Projects/Results
+The synthetic generated math data by the tree search method has been used to improve the model alignment task. We have shown that it helps to improve the 340b model alignment performance on the math category.
+Following is a table comparing TreeSearch+LLM with common model alignment methods that it has the benefits of solving hard problems by searching more efficiently.
+Methods
+
+Prompt
+
+Responses
+
+Reward/Verifier
+
+Online/Offline
+
+Search Efficiency
+
+RLHF
+
+Yes
+
+No
+
+Reward Model
+
+Online
+
+Less Efficient
+
+DPO
+
+Yes
+
+Yes
+
+Preference Data
+
+Offline
+
+No
+
+LLM+TreeSearch
+
+Yes
+
+No
+
+Reward Model
+
+Offline
+
+Efficient
+
+
+We compared SFT on the original GSM8K dataset, SFT on the extracted data from tree search results, and policy improve by matching the LM policy to the tree search policy.
+Model
+
+Validation Accuracy
+
+Train accuracy
+
+Test accuracy
+
+Raw Model
+
+0.3451
+
+0.3453
+
+0.3172
+
+Policy Improvement
+
+0.662
+
+0.6991
+
+0.629
+
+SFT (Search Data)
+
+0.618
+
+0.6482
+
+0.6194
+
+SFT (Raw Data)
+
+0.575
+
+
+0.566
+
+
+We compare the policy only network vs hybrid network (policy + value) and we show they have similar test accuracy performance though the hybrid network has better search accuracy (search without oracle). The value head is important for the tree search to guide the search process to find the solution. By adding more MCTS steps, the accuracy of solving the math problems is improved significantly.
+
+
+We have seen the validation and test accuracy plateau after the 1st iterations. We hypothesized that it is caused by using the same math problem prompts from iteration to iteration. The tree search is forced to solve the same problem again and again and it won't add any new information. @Gerald Shen is planning to use the OpenMathInstruct data that has 1.8m problem-solution pairs for the next experiments.  This allows the tree search to find optimal policy for different prompts for a different iteration.  
+We can barely improve Igor's Mathtool model using the tree search method. The hypothesis is that the model is already very good at solving the math problems. The LLM policy has a low perplexity for the math prompts, and the tree search method is not going to explore and find better answers.
+@Makesh Narsimhan Sreedhar is using tree search to find a good reasoning path that leads to correct human helpsteer labels. We would like to build a better reward model using human label as the ground truth signal.
+Collaborating with  @Erick Galinkin, @Makesh Narsimhan Sreedhar and @Shaona to work on the jailbreak defense task. By treating the jailbreak and LLM defender as a zero-sum game, we can use the tree search method to find the optimal policy to defend the jailbreak and still provides helpful responses.
+@Jiaqi Zeng is exploring an alternative model alignment method that relies on LLM-as-a-judge as the reward model. The hypothesis is that by iteratively improve the LLM, the LLM-as-a-judge capability is also enhanced so we can achieve better model alignment performance.
+Tried to use distance between SteerLM condition attributes and the evaluated LLM output responses as the reward signal to improve the LLM policy. The initial result shows the improved policy by tree search has better distance compared with greedy sampled responses.
+
+Working together with @Robert Kirby and @Jialin Song, plan to integrate the tree search with Lang-RL library so it can interact with the more environments and be applied to solve more problems. We plan to work on improving the LLM capabilities as an autonomous software engineer agent. 
+SteerLM Model Alignments
+Work with @Zhilin Wang to align the 100 percent 340B model. We have shown the helpsteer 1.1 dataset helps to train a reward model that tops the reward model benchmark. We plan to use the reward model to annotate the best SFT data from @Jiaqi Zeng and align the 340B model. In the long term, we plan to apply the tree search method to improve the SteerLM model performance.
+Model Alignment Benchmark Evaluation
+Added IFEval benchmark to the model alignment launcher which can be used to evaluate the model performance on the detailed instruction following task. Our aligned model has some gaps to follow instructions well, which is found in parallel by @Mingjie Liu.  We have built an IFEval leaderboard to track the performance. We have shown using synthetic instruction following data generated by @Shengyang Sunis helpful to improve the model performance on the IFEval benchmark. He currently is working on to generate a mutiple turn version of the synthetic instruction following data which matches the MT-benchmark distribution better.
+@Zhilin Wang added RewardBench to the alignment benchmark evaluation. We can use it to evaluate the reward model performance that covers a wide variety of prompts. We have a RewardBench leaderboard to track the performance. We have shown the helpsteer 1.1 dataset is helpful to train a reward model that tops the reward model benchmark.
+@Shengyang Sun added AlpacaEval to the alignment benchmark evaluation. We can use it to evaluate the model alignment performance which is the second most popular model alignment benchmark. We have a AlpacaEval leaderboard to track the performance.
+@Olivier Delalleau added GSM8K math benchmark to the alignment benchmark evaluation with a leaderboard to track the performance.
+
+
 ## Mission: Develop advanced models that are in sync with human values.
 
 
