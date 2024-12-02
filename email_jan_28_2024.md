@@ -1,3 +1,90 @@
+
+# Mission: Develop Advanced Language Models with Robust Reasoning Capabilities
+
+- Community Development of O1-like Models
+    - Several organizations have developed reasoning-focused models that aim to rival OpenAI's O1 capabilities:
+    - DeepSeek R1
+        - Achieves competitive performance with O1-preview on AIME and MATH benchmarks
+        - Will be open-sourced and offer API access, though licensing terms are not yet announced
+    - Marco-O1 by Alibaba
+        - Incorporates Chain-of-Thought (CoT) fine-tuning and Monte Carlo Tree Search (MCTS) for complex reasoning
+        - Excels at strategic decision-making tasks involving uncertainty and abstract reasoning
+    - QwQ-32B-Preview by Alibaba
+        - Outperforms O1-preview and O1-mini on AIME and MATH benchmarks
+        - Available under Apache 2.0 license for commercial applications, though only certain components are released
+- Nvidia O1-like Reasoning Model
+  - Our apporach:
+    - Prepare long chain of thought data that mimics the O1 internal thinking process
+    - Train the initial reasoning SFT model using the prepared data
+    - Run MCTS using the initial reasoning SFT model to create long chain of thought data for hard prompts
+    - Combine the long chain of thought data to train the final reasoning SFT data
+    - Use RL to further improve the reasoning accuracy for the final reasoning SFT model
+  - Reasoning benchmark
+    - Carefully selected a few tasks that requires deep thinking to solve it.
+    - Currently it includes tasks like game24, arc-agi, mini-crossword, remainder problem, parentheses problem and minimum bridge crossing problem. 
+    - David integrates the Qwen math eval to evaluate the math performances for reasoning models. 
+  - A joint System1 and System2 model 
+    - AI assisstant should operate in two modes, the typical instruction following modes(system 1) that provides quick responses and system2 model that think carefully before giving the final answer.
+    - The model behavior can be controlled by using different system prompt and our initial prototype shows the model can switch between modes smoothly. The system2 modes takes more time to generate answer but has better accuracy. For example, in game24 benchmark, system2 mode has accuracy of 29% in contrast to 21% with system 1 mode. 
+  - Experimented with two types of models using different reansoing chain data
+     - ARB-based reasoning chain model
+        - Using ARB as a control signal to guide the detailed reasoning step
+        - Run MCTS with different ARBs as different actions, generated long chain of thought data on game24, MATH and onmi math prompts 
+     - Natural monologue reasoing chain model
+        - Using few shots learning to prompt the Llama3.1 70b model to generate O1-like monologue reasoning chain.
+        - Run MCTS using top-k reasoning steps as different actions.
+     - Our initial results shows natural monologue reasoing chain model outperform the ARB-based reasoing model. We hypotheses that natural reasoning steps has less constraits and the model can think more flexiblly. 
+
+### Experime
+
+### Development Status
+- Introduced System Two models for novel problem-solving through step-by-step reasoning
+- Successfully implemented MCTS for Game 24 benchmark with good reasoning chains
+- Achieved 45% accuracy in Amy task reasoning chains
+- Identified challenges in spatial reasoning tasks (mini crossword, ARCAGI)
+
+### Model Performance Results
+
+| Model | Game 24 | AME Benchmark | Math Tasks |
+|-------|----------|---------------|------------|
+| Deep Seek R1 | Competitive | ~30% accuracy | Strong performance |
+| Marko 01 | Notable | Under evaluation | Uses MCTS for reasoning |
+| System 2 Mode | Outperforms System 1 | - | Improved reasoning |
+
+## Technical Implementations
+
+### Special Tokens Integration
+- Addressing token overlapping challenges in SFT process
+- Experimenting with different initialization methods
+- Implementing transition words for improved reasoning chains
+- Testing various initialization methods with larger standard deviation
+
+### MCTS Implementation Results
+- 97.4% success rate on math datasets
+- 48% success rate on challenging OMI dataset
+- Implemented filtering system for incorrect guesses
+- Enhanced confidence score calculation for search process
+
+## Value Model Development
+
+### Training Progress
+- Trained value model using combined datasets: 2K learning anteater, 13K prompts, and 7K health stair prompts
+- Achieved 2% improvement in reward metrics (3.2 to 3.3)
+- Planning to exclude 100 responses data in next training round for potential bigger improvements
+- Adjusted hyperparameters: low P sampling probability and beta temperature for candidate tokens
+
+
+## Next Steps
+
+- Train dedicated System Two model using MCTS-generated data
+- Apply reinforcement learning to enhance problem-solving capabilities
+- Generate and verify large-scale reasoning chain datasets
+- Continue SFT process focusing on special tokens optimization
+- Implement time-based and token-based improvements for inference
+
+
+
+
 Aug 8
 
 Here's a revised version of the email with improved English and grammar:
