@@ -1,6 +1,20 @@
 
 # Mission: Develop Advanced Language Models with Robust Reasoning Capabilities
 
+- Promising Results From Our Prototype NVIDIA O1-like reasonining model (Gray-Kangaroo).
+    - The model is able to generate long chain of thought to breakdown the problems, better use its knowledge, refect and error correct previous reasoning steps and propse alternative solutions.
+    - The initial SFT reasoning model improves the Math and Reasoning categories compares with the Nemotron 70B model
+
+|                | mmlu_stem | amc23 | qwen-math | gsm8k | aqua  | sat_math | aime24 |
+|----------------|-----------|-------|-----------|-------|-------|----------|--------|
+| Gray-Kangaroo  | 42.6*     | 52.5* | 75.2*     | 88.2  | 48    | 56.2*    | 23.3*  |
+| Nemotron 70B   | 33.8      | 50    | 70.4      | 94.4* | 55.1* | 43.8     | 16.7   |
+
+|                | bridge  | game24 | reasoning-math | remainder |
+|----------------|---------|--------|-----------------|-----------|
+| Gray-Kangaroo  | 30.71*  | 37.14* | 87.14*          | 5*        |
+| Nemotron 70B   | 15.71   | 27.14  | 82.86           | 2.86      |
+
 - Community Development of O1-like Models
     - Several organizations have developed reasoning-focused models that aim to rival OpenAI's O1 capabilities:
     - DeepSeek R1
@@ -12,7 +26,7 @@
     - QwQ-32B-Preview by Alibaba
         - Outperforms O1-preview and O1-mini on AIME and MATH benchmarks
         - Available under Apache 2.0 license for commercial applications, though only certain components are released
-- Nvidia O1-like Reasoning Model
+- More Details on Nvidia O1-like Reasoning Model
   - Our apporach:
     - Prepare long chain of thought data that mimics the O1 internal thinking process
     - Train the initial reasoning SFT model using the prepared data
@@ -33,7 +47,14 @@
      - Natural monologue reasoing chain model
         - Using few shots learning to prompt the Llama3.1 70b model to generate O1-like monologue reasoning chain.
         - Run MCTS using top-k reasoning steps as different actions.
-     - Our initial results shows natural monologue reasoing chain model outperform the ARB-based reasoing model. We hypotheses that natural reasoning steps has less constraits and the model can think more flexiblly. 
+     - Our initial results shows natural monologue reasoing chain model outperform the ARB-based reasoing model (Gray-Kangaroo is an natural monologue reasoning model). We hypotheses that natural reasoning steps has less constraits and the model can think more flexiblly. 
+  - Our initial ablation study shows openO1-SFT data explains a lot of good model performance. For example, mmlu_stem benchmark is dropped from 33 to 36.6
+  - We are experimenting with curriculum leanring to boost the Gray-Kangaroo model perfomrance using RL on a set of math prompts sorted by difficulties. 
+  - Next steps:
+    - Include more long chain of thought SFT data to train next version of reasoing model
+    - Run MCTS to create better synthetic chain of thought data for solving hard prompts
+    - Train better model data using the combined SFT data.
+    - Keep exploring using RL to improve the reasoning performance.
 
 ### Experime
 
