@@ -1,5 +1,82 @@
-
 # Mission: Develop Advanced Language Models with Robust Reasoning Capabilities
+
+- Promising Results from Our Prototype NVIDIA O1-like Reasoning Model (Gray-Kangaroo)
+    - Our model demonstrates the ability to generate long chains of thought, break down problems effectively, utilize its knowledge better, reflect on and corrects previous reasoning steps, and proposes alternative solutions.
+    - The initial SFT reasoning model shows improvements in the Math and Reasoning categories when compared to the Nemotron 70B model.
+
+|                | mmlu_stem | amc23 | qwen-math | gsm8k | aqua  | sat_math | aime24 |
+|----------------|-----------|-------|-----------|-------|-------|----------|--------|
+| Gray-Kangaroo  | 42.6*     | 52.5* | 75.2*     | 88.2  | 48    | 56.2*    | 23.3*  |
+| Nemotron 70B   | 33.8      | 50    | 70.4      | 94.4* | 55.1* | 43.8     | 16.7   |
+
+|                | bridge  | game24 | reasoning-math | remainder |
+|----------------|---------|--------|-----------------|-----------|
+| Gray-Kangaroo  | 30.71*  | 37.14* | 87.14*          | 5*        |
+| Nemotron 70B   | 15.71   | 27.14  | 82.86           | 2.86      |
+
+- Community Development of O1-like Models
+
+    - Several organizations have developed reasoning-focused models aiming to rival OpenAI's O1 capabilities:
+  
+    - **DeepSeek R1**  
+        - Achieves competitive performance with O1-preview on the AIME and MATH benchmarks.  
+        - Will be open-sourced and offer API access, although licensing terms have not yet been announced.
+  
+    - **Marco-O1 by Alibaba**  
+        - Integrates Chain-of-Thought (CoT) fine-tuning and Monte Carlo Tree Search (MCTS) for complex reasoning.  
+        - Excels in strategic decision-making tasks involving uncertainty and abstract reasoning.
+  
+    - **QwQ-32B-Preview by Alibaba**  
+        - Outperforms O1-preview and O1-mini on the AIME and MATH benchmarks.  
+        - Available under the Apache 2.0 license for commercial applications, though only some components have been released.
+
+- More Details on NVIDIA O1-like Reasoning Model
+
+    - **Our Approach:**  
+      - Prepare long chains of thought data that mimic the O1 internal reasoning process.  
+      - Train the initial reasoning SFT model using the prepared data.  
+      - Run MCTS with the initial reasoning SFT model to generate long chains of thought for difficult prompts.  
+      - Combine the long chains of thought data to train the final reasoning SFT model.  
+      - Use Reinforcement Learning (RL) to further improve the reasoning accuracy of the final model.
+
+    - **Reasoning Benchmark:**  
+      - We carefully selected tasks that require deep thinking to solve.  
+      - Current tasks include the game24, arc-agi, mini-crossword, remainder problem, parentheses problem, and minimum bridge crossing problem.  
+      - David integrates the Qwen Math evaluation to assess the math performance of reasoning models.
+
+    - **A Joint System1 and System2 Model:**  
+      - An AI assistant should operate in two modes: the typical instruction-following mode (System 1), which provides quick responses, and the System 2 model, which carefully considers the problem before providing an answer.  
+      - The model's behavior can be controlled using different system prompts. Our initial prototype shows that the model can smoothly switch between modes. The System 2 mode takes longer but offers better accuracy. For example, in the game24 benchmark, the accuracy in System 2 mode is 29%, compared to 21% in System 1 mode.
+
+    - **Experimentation with Two Types of Reasoning Models Using Different Chains of Thought:**
+
+      - **ARB-based Reasoning Chain Model:**  
+        - Uses ARB as a control signal to guide detailed reasoning steps.  
+        - Runs MCTS with different ARBs as distinct actions, generating long chains of thought for game24, MATH, and Omni Math prompts.
+    
+      - **Natural Monologue Reasoning Chain Model:**  
+        - Uses few-shot learning to prompt the Llama3.1 70B model to generate O1-like monologue reasoning chains.  
+        - Runs MCTS using top-k reasoning steps as different actions.
+    
+      - Our initial results indicate that the natural monologue reasoning chain model outperforms the ARB-based reasoning model. We hypothesize that natural reasoning steps, being less constrained, allow the model to think more flexibly. (Gray-Kangaroo is a natural monologue reasoning model.)
+
+    - **Initial Ablation Study:**  
+      - Our initial ablation study suggests that OpenO1-SFT data significantly contributes to the model's performance. For instance, the mmlu_stem benchmark score improved from 33 to 36.6.
+
+    - **Curriculum Learning Experimentation:**  
+      - We are experimenting with curriculum learning to boost Gray-Kangaroo’s performance using RL on a set of math prompts ordered by difficulty.
+
+    - **Next Steps:**
+        - Incorporate more long-chain-of-thought SFT data to train the next version of the reasoning model.  
+        - Run MCTS to generate better synthetic chains of thought for solving difficult prompts.  
+        - Train the model with the combined SFT data to improve its reasoning capabilities.  
+        - Continue exploring the use of RL to enhance reasoning performance.
+
+|     | Gray-Kangroo | OpenMath |     
+|-----------|---------|---------|
+| AMC23     | 21/40   | 20/40   |
+| AIME24    | 7/30    | 4/30    | 
+
 
 - Promising Results From Our Prototype NVIDIA O1-like reasonining model (Gray-Kangaroo).
     - The model is able to generate long chain of thought to breakdown the problems, better use its knowledge, refect and error correct previous reasoning steps and propse alternative solutions.
